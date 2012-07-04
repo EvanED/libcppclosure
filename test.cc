@@ -72,12 +72,8 @@ void binder(ffi_cif * cif, void * ret,
 
   PhysicalReturnType * ret2 = (PhysicalReturnType *)(ret);
 
-  std::cout << "Return type: " <<typeid(PhysicalReturnType).name() << "\n";
-
   *ret2 = (*func)(FormActual<DeclaredTyArg1>::form_actual(*arg1),
                   FormActual<DeclaredTyArg2>::form_actual(*arg2));
-
-  std::cout << "return was " << *ret2 << "\n";
 }
 
 
