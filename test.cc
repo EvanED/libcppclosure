@@ -15,7 +15,7 @@ class C {
   const char * x;
 public:
   C() { x = "orig\n"; }
-  C(C const & c) { x = "copy\n"; }
+  C(C const & c) { (void)c; x = "copy\n"; }
   char const * str() { return x; }
 };
 
@@ -54,7 +54,8 @@ struct FormActual<Ty &> {
 
 
 template<typename FunctionType>
-void binder(ffi_cif * cif, void * ret,
+void binder(ffi_cif * cif __attribute__((unused)),
+	    void * ret,
 	    void * args[], void * funcptr)
 {
   typedef typename FunctionType::first_argument_type DeclaredTyArg1;
