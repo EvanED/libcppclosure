@@ -79,9 +79,8 @@ class CCallableClosure {
   fputs_t bound_puts;
   std::vector<ffi_type *> args;
   ffi_closure * closure;
-
 public:
-  CCallableClosure(std::function<int (C&, FILE*)> & my_fputs_wrapper)
+  CCallableClosure(std::shared_ptr<std::function<int (C&, FILE*)>> const & my_fputs_wrapper)
     : args(ffi_function::get_arg_types<C&, FILE*>())
   {
     ffi_cif cif;
@@ -96,8 +95,8 @@ public:
           == FFI_OK)
       {
         if (ffi_prep_closure_loc(closure, &cif, 
-                                 &binder<std::remove_reference<decltype(my_fputs_wrapper)>::type>,
-                                 static_cast<void*>(&my_fputs_wrapper),
+                                 &binder<std::remove_reference<decltype(*my_fputs_wrapper)>::type>,
+                                 static_cast<void*>(my_fputs_wrapper.get()),
                                  reinterpret_cast<void*>(bound_puts))
             == FFI_OK)
         {
@@ -123,7 +122,7 @@ int main()
 {
   std::shared_ptr<std::function<int (C&, FILE*)>>
     my_fputs_wrapper(new std::function<int (C&, FILE*)>(my_fputs));
-  CCallableClosure bound_puts(*my_fputs_wrapper);
+  CCallableClosure bound_puts(my_fputs_wrapper);
   int rc;
 
   C c;
