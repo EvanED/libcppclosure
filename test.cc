@@ -94,7 +94,8 @@ public:
     
     if (closure_descriptor_) {
       if (ffi_prep_cif(&interface_, FFI_DEFAULT_ABI, argument_types_.size(),
-                       &ffi_type_uint, &argument_types_[0])
+                       ffi_function::get_ffi_type<typename boost::function_traits<FunctionType>::result_type>::value,
+                       &argument_types_[0])
           == FFI_OK)
       {
         if (ffi_prep_closure_loc(closure_descriptor_, &interface_, 
@@ -129,6 +130,8 @@ int main()
 
   C c;
   rc = bound_puts.get_func_ptr()(c, stdout);
+
+  
 
   //ffi_closure_free(closure);
   return 0;
