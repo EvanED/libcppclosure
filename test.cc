@@ -79,12 +79,12 @@ class CCallableClosure {
   fputs_t bound_puts;
   std::vector<ffi_type *> args;
   ffi_closure * closure;
+  ffi_cif cif;
+    
 public:
   CCallableClosure(std::shared_ptr<std::function<int (C&, FILE*)>> const & my_fputs_wrapper)
     : args(ffi_function::get_arg_types<C&, FILE*>())
   {
-    ffi_cif cif;
-
     closure = static_cast<ffi_closure*>
       (ffi_closure_alloc(sizeof(ffi_closure), 
                          reinterpret_cast<void**>(&bound_puts)));
