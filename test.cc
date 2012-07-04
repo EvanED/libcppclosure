@@ -50,7 +50,7 @@ struct FormActual<Ty &> {
 
 template<typename FunctionType>
 void binder(ffi_cif * cif, void * ret,
-	    void * args[], void * stream)
+	    void * args[], void * funcptr)
 {
   typedef typename boost::function_traits<FunctionType>::arg1_type DeclaredTyArg1;
   typedef typename boost::function_traits<FunctionType>::arg2_type DeclaredTyArg2;  
@@ -61,12 +61,12 @@ void binder(ffi_cif * cif, void * ret,
   PhysicalTyArg1 * arg1 = (PhysicalTyArg1 *)args[0];
   PhysicalTyArg2 * arg2 = (PhysicalTyArg2 *)args[1];
 
-  (void) stream;
+  FunctionType * func = reinterpret_cast<FunctionType*>(funcptr);
 
   unsigned int * ret2 = static_cast<unsigned*>(ret);
 
-  *ret2 = my_fputs(FormActual<DeclaredTyArg1>::form_actual(*arg1),
-                   FormActual<DeclaredTyArg2>::form_actual(*arg2));
+  *ret2 = func(FormActual<DeclaredTyArg1>::form_actual(*arg1),
+               FormActual<DeclaredTyArg2>::form_actual(*arg2));
 }
 
 
@@ -90,7 +90,7 @@ int main()
     {
       if (ffi_prep_closure_loc(closure, &cif, 
 			       &binder<int (C&, FILE*)>,
-			       static_cast<void*>(stdout),
+			       reinterpret_cast<void*>(my_fputs),
 			       reinterpret_cast<void*>(bound_puts))
 	  == FFI_OK)
       {
