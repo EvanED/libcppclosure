@@ -55,13 +55,13 @@ void binder(ffi_cif * cif, void * ret,
   
   PhysicalTyArg1 * arg1 = (PhysicalTyArg1 *)args[0];
   PhysicalTyArg2 * arg2 = (PhysicalTyArg2 *)args[1];
-  
-  FILE * stream2 = static_cast<FILE*>(stream);
+
+  (void) stream;
+
   unsigned int * ret2 = static_cast<unsigned*>(ret);
 
-  *ret2 = (FormActual<DeclaredTyArg1>::form_actual(*arg1))
-    (FormActual<DeclaredTyArg2>::form_actual(*arg2),
-     stream2);
+  *ret2 = my_fputs(FormActual<DeclaredTyArg1>::form_actual(*arg1),
+                   FormActual<DeclaredTyArg2>::form_actual(*arg2));
 }
 
 
@@ -71,7 +71,7 @@ int main()
   std::vector<ffi_type *> args = ffi_function::get_arg_types<C&, FILE*>();
   ffi_closure * closure;
 
-  int (*bound_puts)(func_t, C &);
+  int (*bound_puts)(C &, FILE*);
   int rc;
   
   closure = static_cast<ffi_closure*>
@@ -84,13 +84,13 @@ int main()
 	== FFI_OK)
     {
       if (ffi_prep_closure_loc(closure, &cif, 
-			       &binder<func_t, C&>,
+			       &binder<C&, FILE*>,
 			       static_cast<void*>(stdout),
 			       reinterpret_cast<void*>(bound_puts))
 	  == FFI_OK)
       {
 	C c;
-	rc = bound_puts(my_fputs, c);
+	rc = bound_puts(c, stdout);
       }
     }
   }
