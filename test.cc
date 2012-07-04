@@ -77,13 +77,13 @@ typedef int (*fputs_t)(C&, FILE*);
 class CCallableClosure {
   fputs_t bound_puts;
   std::vector<ffi_type *> args;
+  ffi_closure * closure;
 
 public:
   CCallableClosure(std::function<int (C&, FILE*)> & my_fputs_wrapper)
     : args(ffi_function::get_arg_types<C&, FILE*>())
   {
     ffi_cif cif;
-    ffi_closure * closure;
 
     closure = static_cast<ffi_closure*>
       (ffi_closure_alloc(sizeof(ffi_closure), 
@@ -110,6 +110,10 @@ public:
   fputs_t
   get_func_ptr() const {
     return bound_puts;
+  }
+
+  ~CCallableClosure() {
+    ffi_closure_free(closure);
   }
 };
 
