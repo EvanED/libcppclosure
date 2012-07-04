@@ -86,7 +86,7 @@ typedef int (*fputs_t)(C&, FILE*);
 
 template<typename FunctionType>
 class CCallableClosure {
-  fputs_t c_function_pointer_;
+  FunctionType * c_function_pointer_;
   std::vector<ffi_type *> argument_types_;
   ffi_closure * closure_descriptor_;
   ffi_cif interface_;
@@ -120,7 +120,7 @@ public:
     c_function_pointer_ = nullptr;
   }
 
-  fputs_t
+  FunctionType *
   get_func_ptr() const {
     return c_function_pointer_;
   }
