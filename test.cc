@@ -30,15 +30,6 @@ struct ReferenceToPointer<Ty&> {
   typedef Ty * type;
 };
 
-template<typename Ty>
-struct FormActual {
-  Ty & form_actual(Ty & obj) {
-    return obj;
-  }
-  Ty const & form_actual(Ty const & obj) {
-    return obj;
-  }
-};
 
 template<typename Ty>
 struct FormActual {
@@ -49,8 +40,8 @@ struct FormActual {
 
 template<typename Ty>
 struct FormActual<Ty &> {
-  static Ty * form_actual(Ty & obj) {
-    return &obj;
+  static Ty & form_actual(Ty * obj) {
+    return *obj;
   }
 };
 
@@ -68,7 +59,7 @@ void binder(ffi_cif * cif, void * ret,
 
   *ret2 = (FormActual<TyArg1>::form_actual(*arg1))
     (FormActual<TyArg2>::form_actual(*arg2),
-     stream);
+     stream2);
 }
 
 
