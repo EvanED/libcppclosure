@@ -71,38 +71,49 @@ void binder(ffi_cif * cif, void * ret,
 }
 
 
-int main()
+typedef int (*fputs_t)(C&, FILE*);
+
+fputs_t
+make_closure(std::function<int (C&, FILE*)> & my_fputs_wrapper,
+             std::vector<ffi_type *> & args)
 {
   ffi_cif cif;
-  std::vector<ffi_type *> args = ffi_function::get_arg_types<C&, FILE*>();
   ffi_closure * closure;
+  fputs_t bound_puts;
 
-  int (*bound_puts)(C &, FILE*);
-  int rc;
-
-  std::function<int (C&, FILE*)> my_fputs_wrapper = my_fputs;
-  
   closure = static_cast<ffi_closure*>
     (ffi_closure_alloc(sizeof(ffi_closure), 
-		       reinterpret_cast<void**>(&bound_puts)));
-
+                       reinterpret_cast<void**>(&bound_puts)));
+  
   if (closure) {
     if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, args.size(),
-		     &ffi_type_uint, &args[0])
-	== FFI_OK)
+                     &ffi_type_uint, &args[0])
+        == FFI_OK)
     {
       if (ffi_prep_closure_loc(closure, &cif, 
-			       &binder<decltype(my_fputs_wrapper)>,
-			       static_cast<void*>(&my_fputs_wrapper),
-			       reinterpret_cast<void*>(bound_puts))
-	  == FFI_OK)
+                               &binder<std::remove_reference<decltype(my_fputs_wrapper)>::type>,
+                               static_cast<void*>(&my_fputs_wrapper),
+                               reinterpret_cast<void*>(bound_puts))
+          == FFI_OK)
       {
-	C c;
-	rc = bound_puts(c, stdout);
+        return bound_puts;
       }
     }
   }
+  return nullptr;
+}
 
-  ffi_closure_free(closure);
+
+int main()
+{
+  std::vector<ffi_type *> args = ffi_function::get_arg_types<C&, FILE*>();
+  std::function<int (C&, FILE*)> my_fputs_wrapper = my_fputs;
+  fputs_t bound_puts = make_closure(my_fputs_wrapper, args);
+  int rc;
+
+  C c;
+  rc = bound_puts(c, stdout);
+
+  //ffi_closure_free(closure);
   return 0;
 }
