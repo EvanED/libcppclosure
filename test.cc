@@ -20,16 +20,55 @@ int my_fputs(C & c, FILE * stream)
   return fputs(c.str(), stream);
 }
 
+template<typename Ty>
+struct ReferenceToPointer {
+  typedef Ty type;
+};
 
-void puts_binding(ffi_cif * cif, void * ret,
-		  void * args[], void * stream)
+template<typename Ty>
+struct ReferenceToPointer<Ty&> {
+  typedef Ty * type;
+};
+
+template<typename Ty>
+struct FormActual {
+  Ty & form_actual(Ty & obj) {
+    return obj;
+  }
+  Ty const & form_actual(Ty const & obj) {
+    return obj;
+  }
+};
+
+template<typename Ty>
+struct FormActual {
+  static Ty & form_actual(Ty & obj) {
+    return obj;
+  }
+};
+
+template<typename Ty>
+struct FormActual<Ty &> {
+  static Ty * form_actual(Ty & obj) {
+    return &obj;
+  }
+};
+
+
+template<typename TyArg1, typename TyArg2>
+void binder(ffi_cif * cif, void * ret,
+	    void * args[], void * stream)
 {
-  func_t* func = (func_t*)args[0];
-  C ** s = (C**)args[1];
+  typedef typename ReferenceToPointer<TyArg1>::type RealTyArg1;
+  typedef typename ReferenceToPointer<TyArg2>::type RealTyArg2;
+  RealTyArg1 * arg1 = (RealTyArg1 *)args[0];
+  RealTyArg2 * arg2 = (RealTyArg2 *)args[1];
   FILE * stream2 = static_cast<FILE*>(stream);
   unsigned int * ret2 = static_cast<unsigned*>(ret);
 
-  *ret2 = (*func)(**s, stream2);
+  *ret2 = (FormActual<TyArg1>::form_actual(*arg1))
+    (FormActual<TyArg2>::form_actual(*arg2),
+     stream);
 }
 
 
@@ -52,7 +91,7 @@ int main()
 	== FFI_OK)
     {
       if (ffi_prep_closure_loc(closure, &cif, 
-			       puts_binding,
+			       &binder<func_t, C&>,
 			       static_cast<void*>(stdout),
 			       reinterpret_cast<void*>(bound_puts))
 	  == FFI_OK)
