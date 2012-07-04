@@ -1,5 +1,7 @@
 #include <functional>
 #include <memory>
+#include <typeinfo>
+#include <iostream>
 #include <stdio.h>
 #include <ffi.h>
 
@@ -19,9 +21,10 @@ public:
 
 typedef int (*func_t)(C & s, FILE * stream);
 
-int my_fputs(C & c, FILE * stream)
+double my_fputs(C & c, FILE * stream)
 {
-  return fputs(c.str(), stream);
+  fputs(c.str(), stream);
+  return 17.7;
 }
 
 template<typename Ty>
@@ -55,20 +58,26 @@ void binder(ffi_cif * cif, void * ret,
 	    void * args[], void * funcptr)
 {
   typedef typename FunctionType::first_argument_type DeclaredTyArg1;
-  typedef typename FunctionType::second_argument_type DeclaredTyArg2;  
+  typedef typename FunctionType::second_argument_type DeclaredTyArg2;
+  typedef typename FunctionType::result_type DeclaredReturnTy;
   
   typedef typename ReferenceToPointer<DeclaredTyArg1>::type PhysicalTyArg1;
   typedef typename ReferenceToPointer<DeclaredTyArg2>::type PhysicalTyArg2;
+  typedef typename ReferenceToPointer<DeclaredReturnTy>::type PhysicalReturnType;
   
   PhysicalTyArg1 * arg1 = (PhysicalTyArg1 *)args[0];
   PhysicalTyArg2 * arg2 = (PhysicalTyArg2 *)args[1];
 
   FunctionType * func = static_cast<FunctionType*>(funcptr);
 
-  unsigned int * ret2 = static_cast<unsigned*>(ret);
+  PhysicalReturnType * ret2 = (PhysicalReturnType *)(ret);
+
+  std::cout << "Return type: " <<typeid(PhysicalReturnType).name() << "\n";
 
   *ret2 = (*func)(FormActual<DeclaredTyArg1>::form_actual(*arg1),
                   FormActual<DeclaredTyArg2>::form_actual(*arg2));
+
+  std::cout << "return was " << *ret2 << "\n";
 }
 
 
@@ -124,12 +133,11 @@ public:
 
 int main()
 {
-  std::function<int (C&, FILE*)> my_fputs_wrapper = my_fputs;
-  CCallableClosure<int (C&, FILE*)> bound_puts(my_fputs_wrapper);
-  int rc;
+  std::function<double (C&, FILE*)> my_fputs_wrapper = my_fputs;
+  CCallableClosure<double (C&, FILE*)> bound_puts(my_fputs_wrapper);
 
   C c;
-  rc = bound_puts.get_func_ptr()(c, stdout);
+  std::cout << bound_puts.get_func_ptr()(c, stdout) << "\n";
 
   
 
