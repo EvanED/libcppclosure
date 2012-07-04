@@ -3,13 +3,27 @@
 
 typedef void (*binder_t)(ffi_cif *, void *, void **, void *);
 
-typedef int (*func_t)(char const * s, FILE * stream);
+class C {
+  const char * x;
+public:
+  C() { x = "orig\n"; }
+  C(C const & c) { x = "copy\n"; }
+  char const * str() { return x; }
+};
+
+typedef int (*func_t)(C * s, FILE * stream);
+
+int my_fputs(C * c, FILE * stream)
+{
+  return fputs(c->str(), stream);
+}
+
 
 void puts_binding(ffi_cif * cif, void * ret,
 		  void * args[], void * stream)
 {
   func_t* func = (func_t*)args[0];
-  char ** s = (char**)args[1];
+  C ** s = (C**)args[1];
   FILE * stream2 = static_cast<FILE*>(stream);
   unsigned int * ret2 = static_cast<unsigned*>(ret);
 
@@ -24,7 +38,7 @@ int main()
   ffi_type * args[nargs];
   ffi_closure * closure;
 
-  int (*bound_puts)(func_t, char const *);
+  int (*bound_puts)(func_t, C *);
   int rc;
   
   closure = static_cast<ffi_closure*>
@@ -44,7 +58,8 @@ int main()
 			       reinterpret_cast<void*>(bound_puts))
 	  == FFI_OK)
       {
-	rc = bound_puts(fputs, "Hello world!\n");
+	C c;
+	rc = bound_puts(my_fputs, &c);
       }
     }
   }
