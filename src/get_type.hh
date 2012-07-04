@@ -1,6 +1,6 @@
 #include <vector>
-
 #include <ffi.h>
+#include <boost/type_traits/function_traits.hpp>
 
 namespace ffi_function
 {
@@ -78,9 +78,11 @@ namespace ffi_function
     };
 
 
-    template<typename TyArg1, typename TyArg2>
+    template<typename FunctionType>
     std::vector<ffi_type *>
     get_arg_types() {
+        typedef typename boost::function_traits<FunctionType>::arg1_type TyArg1;
+        typedef typename boost::function_traits<FunctionType>::arg2_type TyArg2;
 	std::vector<ffi_type *> ret;
 	ret.push_back(get_ffi_type<TyArg1>::value);
 	ret.push_back(get_ffi_type<TyArg2>::value);

@@ -85,7 +85,7 @@ class CCallableClosure {
     
 public:
   CCallableClosure(std::function<FunctionType> const & functor)
-    : args(ffi_function::get_arg_types<C&, FILE*>())
+    : args(ffi_function::get_arg_types<FunctionType>())
     , my_fputs_wrapper(new std::function<FunctionType>(functor))
   {
     closure = static_cast<ffi_closure*>
