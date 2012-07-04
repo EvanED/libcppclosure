@@ -73,46 +73,54 @@ void binder(ffi_cif * cif, void * ret,
 
 typedef int (*fputs_t)(C&, FILE*);
 
-fputs_t
-make_closure(std::function<int (C&, FILE*)> & my_fputs_wrapper,
-             std::vector<ffi_type *> & args)
-{
-  ffi_cif cif;
-  ffi_closure * closure;
+class CCallableClosure {
   fputs_t bound_puts;
 
-  closure = static_cast<ffi_closure*>
-    (ffi_closure_alloc(sizeof(ffi_closure), 
-                       reinterpret_cast<void**>(&bound_puts)));
-  
-  if (closure) {
-    if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, args.size(),
-                     &ffi_type_uint, &args[0])
-        == FFI_OK)
-    {
-      if (ffi_prep_closure_loc(closure, &cif, 
-                               &binder<std::remove_reference<decltype(my_fputs_wrapper)>::type>,
-                               static_cast<void*>(&my_fputs_wrapper),
-                               reinterpret_cast<void*>(bound_puts))
+public:
+  CCallableClosure(std::function<int (C&, FILE*)> & my_fputs_wrapper,
+                   std::vector<ffi_type *> & args)
+  {
+    ffi_cif cif;
+    ffi_closure * closure;
+
+    closure = static_cast<ffi_closure*>
+      (ffi_closure_alloc(sizeof(ffi_closure), 
+                         reinterpret_cast<void**>(&bound_puts)));
+    
+    if (closure) {
+      if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, args.size(),
+                       &ffi_type_uint, &args[0])
           == FFI_OK)
       {
-        return bound_puts;
+        if (ffi_prep_closure_loc(closure, &cif, 
+                                 &binder<std::remove_reference<decltype(my_fputs_wrapper)>::type>,
+                                 static_cast<void*>(&my_fputs_wrapper),
+                                 reinterpret_cast<void*>(bound_puts))
+            == FFI_OK)
+        {
+          return;
+        }
       }
     }
+    bound_puts = nullptr;
   }
-  return nullptr;
-}
+
+  fputs_t
+  get_func_ptr() const {
+    return bound_puts;
+  }
+};
 
 
 int main()
 {
   std::vector<ffi_type *> args = ffi_function::get_arg_types<C&, FILE*>();
   std::function<int (C&, FILE*)> my_fputs_wrapper = my_fputs;
-  fputs_t bound_puts = make_closure(my_fputs_wrapper, args);
+  CCallableClosure bound_puts(my_fputs_wrapper, args);
   int rc;
 
   C c;
-  rc = bound_puts(c, stdout);
+  rc = bound_puts.get_func_ptr()(c, stdout);
 
   //ffi_closure_free(closure);
   return 0;
