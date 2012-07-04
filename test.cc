@@ -77,46 +77,46 @@ typedef int (*fputs_t)(C&, FILE*);
 
 template<typename FunctionType>
 class CCallableClosure {
-  fputs_t bound_puts;
-  std::vector<ffi_type *> args;
-  ffi_closure * closure;
-  ffi_cif cif;
-  std::shared_ptr<std::function<FunctionType>> my_fputs_wrapper;
+  fputs_t c_function_pointer_;
+  std::vector<ffi_type *> argument_types_;
+  ffi_closure * closure_descriptor_;
+  ffi_cif interface_;
+  std::shared_ptr<std::function<FunctionType>> functor_ptr_;
     
 public:
   CCallableClosure(std::function<FunctionType> const & functor)
-    : args(ffi_function::get_arg_types<FunctionType>())
-    , my_fputs_wrapper(new std::function<FunctionType>(functor))
+    : argument_types_(ffi_function::get_arg_types<FunctionType>())
+    , functor_ptr_(new std::function<FunctionType>(functor))
   {
-    closure = static_cast<ffi_closure*>
+    closure_descriptor_ = static_cast<ffi_closure*>
       (ffi_closure_alloc(sizeof(ffi_closure), 
-                         reinterpret_cast<void**>(&bound_puts)));
+                         reinterpret_cast<void**>(&c_function_pointer_)));
     
-    if (closure) {
-      if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, args.size(),
-                       &ffi_type_uint, &args[0])
+    if (closure_descriptor_) {
+      if (ffi_prep_cif(&interface_, FFI_DEFAULT_ABI, argument_types_.size(),
+                       &ffi_type_uint, &argument_types_[0])
           == FFI_OK)
       {
-        if (ffi_prep_closure_loc(closure, &cif, 
-                                 &binder<typename std::remove_reference<decltype(*my_fputs_wrapper)>::type>,
-                                 static_cast<void*>(my_fputs_wrapper.get()),
-                                 reinterpret_cast<void*>(bound_puts))
+        if (ffi_prep_closure_loc(closure_descriptor_, &interface_, 
+                                 &binder<typename std::remove_reference<decltype(*functor_ptr_)>::type>,
+                                 static_cast<void*>(functor_ptr_.get()),
+                                 reinterpret_cast<void*>(c_function_pointer_))
             == FFI_OK)
         {
           return;
         }
       }
     }
-    bound_puts = nullptr;
+    c_function_pointer_ = nullptr;
   }
 
   fputs_t
   get_func_ptr() const {
-    return bound_puts;
+    return c_function_pointer_;
   }
 
   ~CCallableClosure() {
-    ffi_closure_free(closure);
+    ffi_closure_free(closure_descriptor_);
   }
 };
 
