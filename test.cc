@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <ffi.h>
 
+#include "src/get_type.hh"
+
 typedef void (*binder_t)(ffi_cif *, void *, void **, void *);
 
 class C {
@@ -34,8 +36,7 @@ void puts_binding(ffi_cif * cif, void * ret,
 int main()
 {
   ffi_cif cif;
-  const int nargs = 2;
-  ffi_type * args[nargs];
+  std::vector<ffi_type *> args = ffi_function::get_arg_types<C&, FILE*>();
   ffi_closure * closure;
 
   int (*bound_puts)(func_t, C &);
@@ -46,10 +47,8 @@ int main()
 		       reinterpret_cast<void**>(&bound_puts)));
 
   if (closure) {
-    args[0] = &ffi_type_pointer;
-    args[1] = &ffi_type_pointer;
-
-    if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, nargs, &ffi_type_uint, args)
+    if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, args.size(),
+		     &ffi_type_uint, &args[0])
 	== FFI_OK)
     {
       if (ffi_prep_closure_loc(closure, &cif, 
