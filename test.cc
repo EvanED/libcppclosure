@@ -11,11 +11,11 @@ public:
   char const * str() { return x; }
 };
 
-typedef int (*func_t)(C * s, FILE * stream);
+typedef int (*func_t)(C & s, FILE * stream);
 
-int my_fputs(C * c, FILE * stream)
+int my_fputs(C & c, FILE * stream)
 {
-  return fputs(c->str(), stream);
+  return fputs(c.str(), stream);
 }
 
 
@@ -27,7 +27,7 @@ void puts_binding(ffi_cif * cif, void * ret,
   FILE * stream2 = static_cast<FILE*>(stream);
   unsigned int * ret2 = static_cast<unsigned*>(ret);
 
-  *ret2 = (*func)(*s, stream2);
+  *ret2 = (*func)(**s, stream2);
 }
 
 
@@ -38,7 +38,7 @@ int main()
   ffi_type * args[nargs];
   ffi_closure * closure;
 
-  int (*bound_puts)(func_t, C *);
+  int (*bound_puts)(func_t, C &);
   int rc;
   
   closure = static_cast<ffi_closure*>
@@ -59,7 +59,7 @@ int main()
 	  == FFI_OK)
       {
 	C c;
-	rc = bound_puts(my_fputs, &c);
+	rc = bound_puts(my_fputs, c);
       }
     }
   }
