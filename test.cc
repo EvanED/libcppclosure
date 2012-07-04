@@ -73,12 +73,14 @@ void binder(ffi_cif * cif, void * ret,
 
 typedef int (*fputs_t)(C&, FILE*);
 
+
 class CCallableClosure {
   fputs_t bound_puts;
+  std::vector<ffi_type *> args;
 
 public:
-  CCallableClosure(std::function<int (C&, FILE*)> & my_fputs_wrapper,
-                   std::vector<ffi_type *> & args)
+  CCallableClosure(std::function<int (C&, FILE*)> & my_fputs_wrapper)
+    : args(ffi_function::get_arg_types<C&, FILE*>())
   {
     ffi_cif cif;
     ffi_closure * closure;
@@ -114,9 +116,8 @@ public:
 
 int main()
 {
-  std::vector<ffi_type *> args = ffi_function::get_arg_types<C&, FILE*>();
   std::function<int (C&, FILE*)> my_fputs_wrapper = my_fputs;
-  CCallableClosure bound_puts(my_fputs_wrapper, args);
+  CCallableClosure bound_puts(my_fputs_wrapper);
   int rc;
 
   C c;
