@@ -46,19 +46,21 @@ struct FormActual<Ty &> {
 };
 
 
-template<typename TyArg1, typename TyArg2>
+template<typename DeclaredTyArg1, typename DeclaredTyArg2>
 void binder(ffi_cif * cif, void * ret,
 	    void * args[], void * stream)
 {
-  typedef typename ReferenceToPointer<TyArg1>::type RealTyArg1;
-  typedef typename ReferenceToPointer<TyArg2>::type RealTyArg2;
-  RealTyArg1 * arg1 = (RealTyArg1 *)args[0];
-  RealTyArg2 * arg2 = (RealTyArg2 *)args[1];
+  typedef typename ReferenceToPointer<DeclaredTyArg1>::type PhysicalTyArg1;
+  typedef typename ReferenceToPointer<DeclaredTyArg2>::type PhysicalTyArg2;
+  
+  PhysicalTyArg1 * arg1 = (PhysicalTyArg1 *)args[0];
+  PhysicalTyArg2 * arg2 = (PhysicalTyArg2 *)args[1];
+  
   FILE * stream2 = static_cast<FILE*>(stream);
   unsigned int * ret2 = static_cast<unsigned*>(ret);
 
-  *ret2 = (FormActual<TyArg1>::form_actual(*arg1))
-    (FormActual<TyArg2>::form_actual(*arg2),
+  *ret2 = (FormActual<DeclaredTyArg1>::form_actual(*arg1))
+    (FormActual<DeclaredTyArg2>::form_actual(*arg2),
      stream2);
 }
 
