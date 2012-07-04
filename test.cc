@@ -3,6 +3,8 @@
 
 #include "src/get_type.hh"
 
+#include <boost/type_traits/function_traits.hpp>
+
 typedef void (*binder_t)(ffi_cif *, void *, void **, void *);
 
 class C {
@@ -46,10 +48,13 @@ struct FormActual<Ty &> {
 };
 
 
-template<typename DeclaredTyArg1, typename DeclaredTyArg2>
+template<typename FunctionType>
 void binder(ffi_cif * cif, void * ret,
 	    void * args[], void * stream)
 {
+  typedef typename boost::function_traits<FunctionType>::arg1_type DeclaredTyArg1;
+  typedef typename boost::function_traits<FunctionType>::arg2_type DeclaredTyArg2;  
+  
   typedef typename ReferenceToPointer<DeclaredTyArg1>::type PhysicalTyArg1;
   typedef typename ReferenceToPointer<DeclaredTyArg2>::type PhysicalTyArg2;
   
@@ -84,7 +89,7 @@ int main()
 	== FFI_OK)
     {
       if (ffi_prep_closure_loc(closure, &cif, 
-			       &binder<C&, FILE*>,
+			       &binder<int (C&, FILE*)>,
 			       static_cast<void*>(stdout),
 			       reinterpret_cast<void*>(bound_puts))
 	  == FFI_OK)
