@@ -1,4 +1,5 @@
 #include <functional>
+#include <memory>
 #include <stdio.h>
 #include <ffi.h>
 
@@ -120,8 +121,9 @@ public:
 
 int main()
 {
-  std::function<int (C&, FILE*)> my_fputs_wrapper = my_fputs;
-  CCallableClosure bound_puts(my_fputs_wrapper);
+  std::shared_ptr<std::function<int (C&, FILE*)>>
+    my_fputs_wrapper(new std::function<int (C&, FILE*)>(my_fputs));
+  CCallableClosure bound_puts(*my_fputs_wrapper);
   int rc;
 
   C c;
