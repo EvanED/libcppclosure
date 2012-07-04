@@ -1,3 +1,4 @@
+#include <functional>
 #include <stdio.h>
 #include <ffi.h>
 
@@ -52,8 +53,8 @@ template<typename FunctionType>
 void binder(ffi_cif * cif, void * ret,
 	    void * args[], void * funcptr)
 {
-  typedef typename boost::function_traits<FunctionType>::arg1_type DeclaredTyArg1;
-  typedef typename boost::function_traits<FunctionType>::arg2_type DeclaredTyArg2;  
+  typedef typename FunctionType::first_argument_type DeclaredTyArg1;
+  typedef typename FunctionType::second_argument_type DeclaredTyArg2;  
   
   typedef typename ReferenceToPointer<DeclaredTyArg1>::type PhysicalTyArg1;
   typedef typename ReferenceToPointer<DeclaredTyArg2>::type PhysicalTyArg2;
@@ -61,12 +62,12 @@ void binder(ffi_cif * cif, void * ret,
   PhysicalTyArg1 * arg1 = (PhysicalTyArg1 *)args[0];
   PhysicalTyArg2 * arg2 = (PhysicalTyArg2 *)args[1];
 
-  FunctionType * func = reinterpret_cast<FunctionType*>(funcptr);
+  FunctionType * func = static_cast<FunctionType*>(funcptr);
 
   unsigned int * ret2 = static_cast<unsigned*>(ret);
 
-  *ret2 = func(FormActual<DeclaredTyArg1>::form_actual(*arg1),
-               FormActual<DeclaredTyArg2>::form_actual(*arg2));
+  *ret2 = (*func)(FormActual<DeclaredTyArg1>::form_actual(*arg1),
+                  FormActual<DeclaredTyArg2>::form_actual(*arg2));
 }
 
 
@@ -78,6 +79,8 @@ int main()
 
   int (*bound_puts)(C &, FILE*);
   int rc;
+
+  std::function<int (C&, FILE*)> my_fputs_wrapper = my_fputs;
   
   closure = static_cast<ffi_closure*>
     (ffi_closure_alloc(sizeof(ffi_closure), 
@@ -89,8 +92,8 @@ int main()
 	== FFI_OK)
     {
       if (ffi_prep_closure_loc(closure, &cif, 
-			       &binder<int (C&, FILE*)>,
-			       reinterpret_cast<void*>(my_fputs),
+			       &binder<decltype(my_fputs_wrapper)>,
+			       static_cast<void*>(&my_fputs_wrapper),
 			       reinterpret_cast<void*>(bound_puts))
 	  == FFI_OK)
       {
