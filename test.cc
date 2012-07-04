@@ -75,17 +75,18 @@ void binder(ffi_cif * cif, void * ret,
 typedef int (*fputs_t)(C&, FILE*);
 
 
+template<typename FunctionType>
 class CCallableClosure {
   fputs_t bound_puts;
   std::vector<ffi_type *> args;
   ffi_closure * closure;
   ffi_cif cif;
-  std::shared_ptr<std::function<int (C&, FILE*)>> my_fputs_wrapper;
+  std::shared_ptr<std::function<FunctionType>> my_fputs_wrapper;
     
 public:
-  CCallableClosure(std::function<int (C&, FILE*)> const & functor)
+  CCallableClosure(std::function<FunctionType> const & functor)
     : args(ffi_function::get_arg_types<C&, FILE*>())
-    , my_fputs_wrapper(new std::function<int (C&, FILE*)>(functor))
+    , my_fputs_wrapper(new std::function<FunctionType>(functor))
   {
     closure = static_cast<ffi_closure*>
       (ffi_closure_alloc(sizeof(ffi_closure), 
@@ -97,7 +98,7 @@ public:
           == FFI_OK)
       {
         if (ffi_prep_closure_loc(closure, &cif, 
-                                 &binder<std::remove_reference<decltype(*my_fputs_wrapper)>::type>,
+                                 &binder<typename std::remove_reference<decltype(*my_fputs_wrapper)>::type>,
                                  static_cast<void*>(my_fputs_wrapper.get()),
                                  reinterpret_cast<void*>(bound_puts))
             == FFI_OK)
@@ -123,7 +124,7 @@ public:
 int main()
 {
   std::function<int (C&, FILE*)> my_fputs_wrapper = my_fputs;
-  CCallableClosure bound_puts(my_fputs_wrapper);
+  CCallableClosure<int (C&, FILE*)> bound_puts(my_fputs_wrapper);
   int rc;
 
   C c;
