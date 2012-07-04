@@ -78,9 +78,6 @@ void binder(ffi_cif * cif __attribute__((unused)),
 }
 
 
-typedef int (*fputs_t)(C&, FILE*);
-
-
 template<typename FunctionType>
 class CCallableClosure {
   FunctionType * c_function_pointer_;
