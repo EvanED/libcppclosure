@@ -13,6 +13,10 @@
 #error "Include <boost/preprocessor/punctuation/comma_if.hpp> from the place you iterate this file"
 #endif
 
+#ifndef BOOST_PP_LOCAL_ITERATE
+#error "Include <boost/preprocessor/iteration/local.hpp> from the place you iterate this file"
+#endif
+
 #ifdef n
 #error "What kind of dick defined the macro \'n\'?"
 #endif
@@ -30,8 +34,9 @@ namespace ffi_function {
     get_arg_types(std::function<ReturnType (BOOST_PP_ENUM_PARAMS(n, TyArg))> const & func)
     {
         std::vector<ffi_type *> ret;
-        ret.push_back(get_ffi_type<TyArg1>::value);
-        ret.push_back(get_ffi_type<TyArg2>::value);
+#       define BOOST_PP_LOCAL_MACRO(n) ret.push_back(get_ffi_type<BOOST_PP_CAT(TyArg, n)>::value);
+#       define BOOST_PP_LOCAL_LIMITS (0, n)
+#       include BOOST_PP_LOCAL_ITERATE()
         return ret;
     }
 
