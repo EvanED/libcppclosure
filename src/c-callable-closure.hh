@@ -64,7 +64,7 @@ store_return(PhysicalReturnTy * ret_addr,
 }
 
 
-#define BOOST_PP_ITERATION_LIMITS (2,3)
+#define BOOST_PP_ITERATION_LIMITS (0,3)
 #define BOOST_PP_FILENAME_1 "iterate.hh"
 #include BOOST_PP_ITERATE()
 
