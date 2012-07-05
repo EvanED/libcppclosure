@@ -17,6 +17,10 @@
 #error "Include <boost/preprocessor/iteration/local.hpp> from the place you iterate this file"
 #endif
 
+#ifndef BOOST_PP_SUB
+#error "Include <boost/preprocessor/arithmetic/sub.hpp> from the place you iterate this file"
+#endif
+
 #ifdef n
 #error "What kind of dick defined the macro \'n\'?"
 #endif
@@ -35,7 +39,7 @@ namespace ffi_function {
     {
         std::vector<ffi_type *> ret;
 #       define BOOST_PP_LOCAL_MACRO(n) ret.push_back(get_ffi_type<BOOST_PP_CAT(TyArg, n)>::value);
-#       define BOOST_PP_LOCAL_LIMITS (0, n)
+#       define BOOST_PP_LOCAL_LIMITS (0, BOOST_PP_SUB(n,1))
 #       include BOOST_PP_LOCAL_ITERATE()
         return ret;
     }

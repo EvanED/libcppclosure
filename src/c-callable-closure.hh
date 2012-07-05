@@ -3,6 +3,7 @@
 #include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/iteration/iterate.hpp>
 #include <boost/preprocessor/iteration/local.hpp>
+#include <boost/preprocessor/arithmetic/sub.hpp>
 #include <boost/preprocessor/repetition.hpp>
 
 #define BOOST_PP_ITERATION_LIMITS (0,10)
