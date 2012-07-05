@@ -27,6 +27,15 @@ struct FormActual<Ty &> {
   }
 };
 
+template<typename DeclaredReturnTy,
+	 typename PhysicalReturnTy,
+	 typename ActualReturnTy>
+void
+store_return(PhysicalReturnTy * ret_addr,
+	     ActualReturnTy && ret_val)
+{
+  * ret_addr = ret_val;
+}
 
 template<typename FunctionType>
 void binder(ffi_cif * cif __attribute__((unused)),
@@ -48,8 +57,9 @@ void binder(ffi_cif * cif __attribute__((unused)),
 
   PhysicalReturnType * ret2 = (PhysicalReturnType *)(ret);
 
-  *ret2 = (*func)(FormActual<DeclaredTyArg1>::form_actual(*arg1),
-                  FormActual<DeclaredTyArg2>::form_actual(*arg2));
+  store_return<DeclaredReturnTy>(ret2,
+				 (*func)(FormActual<DeclaredTyArg1>::form_actual(*arg1),
+					 FormActual<DeclaredTyArg2>::form_actual(*arg2)));
 }
 
 
