@@ -103,7 +103,7 @@ class CCallableClosure {
     
 public:
   CCallableClosure(std::function<FunctionType> const & functor)
-    : argument_types_(ffi_function::get_arg_types<FunctionType>())
+    : argument_types_(ffi_function::get_arg_types(functor))
     , functor_ptr_(new std::function<FunctionType>(functor))
   {
     closure_descriptor_ = static_cast<ffi_closure*>
