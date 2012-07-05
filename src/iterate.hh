@@ -38,9 +38,11 @@ namespace ffi_function {
     get_arg_types(std::function<ReturnType (BOOST_PP_ENUM_PARAMS(n, TyArg))> const & func)
     {
         std::vector<ffi_type *> ret;
+# if n > 0
 #       define BOOST_PP_LOCAL_MACRO(n) ret.push_back(get_ffi_type<BOOST_PP_CAT(TyArg, n)>::value);
 #       define BOOST_PP_LOCAL_LIMITS (0, BOOST_PP_SUB(n,1))
 #       include BOOST_PP_LOCAL_ITERATE()
+# endif
         return ret;
     }
 
