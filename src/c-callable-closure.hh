@@ -27,15 +27,33 @@ struct FormActual<Ty &> {
   }
 };
 
+///
+/// Just stores the return value in ret_val at ret_addr
 template<typename DeclaredReturnTy,
 	 typename PhysicalReturnTy,
 	 typename ActualReturnTy>
-void
+typename std::enable_if<!std::is_reference<DeclaredReturnTy>::value>::type
 store_return(PhysicalReturnTy * ret_addr,
 	     ActualReturnTy && ret_val)
 {
-  * ret_addr = ret_val;
+  *ret_addr = ret_val;
 }
+
+/// This one is called if the declared return type is a
+/// reference. Then we have something like 'int& foo()', 'ret_addr' is
+/// actually an int**, but 'ret_val' IS STILL AN 'int&'! (This is
+/// because it's straight out of the actual function that was called.)
+/// So we need to store '&ret_val' at 'ret_addr' instead.
+template<typename DeclaredReturnTy,
+	 typename PhysicalReturnTy,
+	 typename ActualReturnTy>
+typename std::enable_if<std::is_reference<DeclaredReturnTy>::value>::type
+store_return(PhysicalReturnTy * ret_addr,
+	     ActualReturnTy && ret_val)
+{
+  *ret_addr = &ret_val;
+}
+
 
 template<typename FunctionType>
 void binder(ffi_cif * cif __attribute__((unused)),

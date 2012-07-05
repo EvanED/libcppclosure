@@ -28,14 +28,12 @@ int main()
 
   std::cout << bound_puts.get_func_ptr()("Hello world!", 17.5) << "\n";
 
-#if 0
   std::function<int & (int, int)> return_ref_test = get_g;
   ffi_function::CCallableClosure<int & (int, int)>
     return_ref_test2(return_ref_test);
 
   std::cout << &(return_ref_test2.get_func_ptr()(1,1)) << "\n";
   std::cout << &g << "\n";
-#endif
 
   return 0;
 }
