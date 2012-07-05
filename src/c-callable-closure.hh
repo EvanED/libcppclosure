@@ -6,6 +6,8 @@
 #include <boost/preprocessor/arithmetic/sub.hpp>
 #include <boost/preprocessor/repetition.hpp>
 
+#define MAX_FFI_FUNCTION_ARITY 10
+
 
 namespace ffi_function {
 
@@ -64,7 +66,7 @@ store_return(PhysicalReturnTy * ret_addr,
 }
 
 
-#define BOOST_PP_ITERATION_LIMITS (0,3)
+#define BOOST_PP_ITERATION_LIMITS (0, MAX_FFI_FUNCTION_ARITY)
 #define BOOST_PP_FILENAME_1 "iterate.hh"
 #include BOOST_PP_ITERATE()
 
