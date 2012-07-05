@@ -1,6 +1,8 @@
 #include "get_type.hh"
 
+#include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/iteration/iterate.hpp>
+#include <boost/preprocessor/repetition.hpp>
 
 #define BOOST_PP_ITERATION_LIMITS (0,10)
 #define BOOST_PP_FILENAME_1 "iterate.hh"

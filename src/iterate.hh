@@ -5,6 +5,14 @@
 #error "iterate.hh should only be included through Boost preprocessor"
 #endif
 
+#ifndef BOOST_PP_ENUM_PARAMS
+#error "Include <boost/preprocessor/repetition.hpp> from the place you iterate this file"
+#endif
+
+#ifndef BOOST_PP_COMMA_IF
+#error "Include <boost/preprocessor/punctuation/comma_if.hpp> from the place you iterate this file"
+#endif
+
 #ifdef n
 #error "What kind of dick defined the macro \'n\'?"
 #endif
@@ -13,11 +21,14 @@
 
 namespace ffi_function {
     
-    template<typename FunctionType>
+    template<
+        typename ReturnType
+        BOOST_PP_COMMA_IF(n)  // There may not be arguments, after all
+        BOOST_PP_ENUM_PARAMS(n, typename TyArg)
+        >
     std::vector<ffi_type *>
-    get_arg_types() {
-        typedef typename boost::function_traits<FunctionType>::arg1_type TyArg1;
-        typedef typename boost::function_traits<FunctionType>::arg2_type TyArg2;
+    get_arg_types(std::function<ReturnType (BOOST_PP_ENUM_PARAMS(n, TyArg))> const & func)
+    {
         std::vector<ffi_type *> ret;
         ret.push_back(get_ffi_type<TyArg1>::value);
         ret.push_back(get_ffi_type<TyArg2>::value);
