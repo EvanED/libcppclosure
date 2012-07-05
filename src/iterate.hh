@@ -60,21 +60,39 @@ namespace ffi_function {
                        void * args[], void * funcptr)
         {
             typedef std::function<DeclaredReturnTy (BOOST_PP_ENUM_PARAMS(n, DeclaredTyArg))> FunctionType;
-            
-            typedef typename ReferenceToPointer<DeclaredTyArg0>::type PhysicalTyArg0;
-            typedef typename ReferenceToPointer<DeclaredTyArg1>::type PhysicalTyArg1;
-            typedef typename ReferenceToPointer<DeclaredReturnTy>::type PhysicalReturnType;
-  
-            PhysicalTyArg0 * arg0 = (PhysicalTyArg0 *)args[0];
-            PhysicalTyArg1 * arg1 = (PhysicalTyArg1 *)args[1];
 
+# if n > 0
+#           define BOOST_PP_LOCAL_MACRO(n) \
+                typedef typename ReferenceToPointer<BOOST_PP_CAT(DeclaredTyArg, n)>::type \
+                        BOOST_PP_CAT(PhysicalTyArg,n);
+#           define BOOST_PP_LOCAL_LIMITS (0, BOOST_PP_SUB(n,1))
+#           include BOOST_PP_LOCAL_ITERATE()
+# endif
+
+            typedef typename ReferenceToPointer<DeclaredReturnTy>::type PhysicalReturnType;
+
+# if n > 0
+#           define BOOST_PP_LOCAL_MACRO(n) \
+                BOOST_PP_CAT(PhysicalTyArg,n) * BOOST_PP_CAT(arg,n) = (BOOST_PP_CAT(PhysicalTyArg,n) *)args[n];
+#           define BOOST_PP_LOCAL_LIMITS (0, BOOST_PP_SUB(n,1))
+#           include BOOST_PP_LOCAL_ITERATE()
+# endif
+                
             FunctionType * func = static_cast<FunctionType*>(funcptr);
 
             PhysicalReturnType * ret2 = (PhysicalReturnType *)(ret);
             
             store_return<DeclaredReturnTy>(ret2,
-                                           (*func)(FormActual<DeclaredTyArg0>::form_actual(*arg0),
-                                                   FormActual<DeclaredTyArg1>::form_actual(*arg1)));
+                                           (*func)(
+# if n > 1
+#           define BOOST_PP_LOCAL_MACRO(n)          FormActual<BOOST_PP_CAT(DeclaredTyArg,n)>::form_actual(*BOOST_PP_CAT(arg,n)),
+#           define BOOST_PP_LOCAL_LIMITS (0, BOOST_PP_SUB(n,2))
+#           include BOOST_PP_LOCAL_ITERATE()
+# endif
+# if n > 0
+                                                   FormActual<BOOST_PP_CAT(DeclaredTyArg,BOOST_PP_SUB(n,1))>::form_actual(*BOOST_PP_CAT(arg,BOOST_PP_SUB(n,1)))
+# endif
+                                                   ));
         }
     };
 
