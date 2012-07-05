@@ -46,6 +46,39 @@ namespace ffi_function {
         return ret;
     }
 
+    template<typename StdFunctionType> struct binder_struct;
+
+    template<
+        typename DeclaredReturnTy
+        BOOST_PP_COMMA_IF(n)  // There may not be arguments, after all
+        BOOST_PP_ENUM_PARAMS(n, typename DeclaredTyArg)
+        >
+    struct binder_struct<std::function<DeclaredReturnTy (BOOST_PP_ENUM_PARAMS(n, DeclaredTyArg))>>
+    {
+        static void go(ffi_cif * cif __attribute__((unused)),
+                       void * ret,
+                       void * args[], void * funcptr)
+        {
+            typedef std::function<DeclaredReturnTy (BOOST_PP_ENUM_PARAMS(n, DeclaredTyArg))> FunctionType;
+            
+            typedef typename ReferenceToPointer<DeclaredTyArg0>::type PhysicalTyArg0;
+            typedef typename ReferenceToPointer<DeclaredTyArg1>::type PhysicalTyArg1;
+            typedef typename ReferenceToPointer<DeclaredReturnTy>::type PhysicalReturnType;
+  
+            PhysicalTyArg0 * arg0 = (PhysicalTyArg0 *)args[0];
+            PhysicalTyArg1 * arg1 = (PhysicalTyArg1 *)args[1];
+
+            FunctionType * func = static_cast<FunctionType*>(funcptr);
+
+            PhysicalReturnType * ret2 = (PhysicalReturnType *)(ret);
+            
+            store_return<DeclaredReturnTy>(ret2,
+                                           (*func)(FormActual<DeclaredTyArg0>::form_actual(*arg0),
+                                                   FormActual<DeclaredTyArg1>::form_actual(*arg1)));
+        }
+    };
+
+
 }
 
 

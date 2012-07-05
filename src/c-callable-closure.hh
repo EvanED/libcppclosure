@@ -6,11 +6,6 @@
 #include <boost/preprocessor/arithmetic/sub.hpp>
 #include <boost/preprocessor/repetition.hpp>
 
-#define BOOST_PP_ITERATION_LIMITS (0,3)
-#define BOOST_PP_FILENAME_1 "iterate.hh"
-#include BOOST_PP_ITERATE()
-
-int zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz;
 
 namespace ffi_function {
 
@@ -66,33 +61,24 @@ store_return(PhysicalReturnTy * ret_addr,
   *ret_addr = &ret_val;
 }
 
-
-template<typename FunctionType>
-void binder(ffi_cif * cif __attribute__((unused)),
-	    void * ret,
-	    void * args[], void * funcptr)
-{
-  typedef typename FunctionType::first_argument_type DeclaredTyArg1;
-  typedef typename FunctionType::second_argument_type DeclaredTyArg2;
-  typedef typename FunctionType::result_type DeclaredReturnTy;
-  
-  typedef typename ReferenceToPointer<DeclaredTyArg1>::type PhysicalTyArg1;
-  typedef typename ReferenceToPointer<DeclaredTyArg2>::type PhysicalTyArg2;
-  typedef typename ReferenceToPointer<DeclaredReturnTy>::type PhysicalReturnType;
-  
-  PhysicalTyArg1 * arg1 = (PhysicalTyArg1 *)args[0];
-  PhysicalTyArg2 * arg2 = (PhysicalTyArg2 *)args[1];
-
-  FunctionType * func = static_cast<FunctionType*>(funcptr);
-
-  PhysicalReturnType * ret2 = (PhysicalReturnType *)(ret);
-
-  store_return<DeclaredReturnTy>(ret2,
-				 (*func)(FormActual<DeclaredTyArg1>::form_actual(*arg1),
-					 FormActual<DeclaredTyArg2>::form_actual(*arg2)));
 }
 
 
+#define BOOST_PP_ITERATION_LIMITS (2,3)
+#define BOOST_PP_FILENAME_1 "iterate.hh"
+#include BOOST_PP_ITERATE()
+
+
+namespace ffi_function {
+
+template<typename FunctionType>
+void binder(ffi_cif * cif,
+            void * ret, void * args[], void * funcptr)
+{
+    binder_struct<FunctionType>::go(cif, ret, args, funcptr);
+}
+    
+    
 template<typename FunctionType>
 class CCallableClosure {
   FunctionType * c_function_pointer_;
