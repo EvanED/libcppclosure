@@ -1,5 +1,13 @@
 #include "get_type.hh"
 
+#include <boost/preprocessor/iteration/iterate.hpp>
+
+#define BOOST_PP_ITERATION_LIMITS (0,10)
+#define BOOST_PP_FILENAME_1 "iterate.hh"
+#include BOOST_PP_ITERATE()
+
+int zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz;
+
 namespace ffi_function {
 
 template<typename Ty>
