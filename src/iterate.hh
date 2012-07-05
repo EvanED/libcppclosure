@@ -22,7 +22,7 @@
 #endif
 
 #ifdef n
-#error "What kind of dick defined the macro \'n\'?"
+#error "What kind of jerk defined the macro \'n\'?"
 #endif
 
 #define n BOOST_PP_ITERATION()
